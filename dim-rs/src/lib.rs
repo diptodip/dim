@@ -457,9 +457,9 @@ where
         Self: Sync,
     {
         let mut background_stack = Vec::with_capacity(image_stack.len());
-        (0..image_stack.len())
+        image_stack
             .into_par_iter()
-            .map(|index| self.estimate_background(&image_stack[index]).data)
+            .map(|image| self.estimate_background(image).data)
             .collect_into_vec(&mut background_stack);
         background_stack.concat()
     }
