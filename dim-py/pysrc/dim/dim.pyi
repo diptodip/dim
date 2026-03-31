@@ -32,3 +32,11 @@ class RollingBall:
         Estimates the background of the image using the rolling ball algorithm.
         """
         pass
+
+    def estimate_background_stack(self, image_stack: Float[np.ndarray, "z y x"]) -> Float[np.ndarray, "z y x"]:
+        """
+        Estimates the background for each slice of the provided image stack
+        using the rolling ball algorithm. The backgrounds for the slices are
+        computed in parallel.
+        """
+        pass

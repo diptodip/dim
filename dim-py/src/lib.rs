@@ -1,8 +1,10 @@
 #[pyo3::pymodule]
 mod dim {
     use dim::RemoveBackground;
-    use numpy::ndarray::Array2;
-    use numpy::{IntoPyArray, PyArray2, PyReadonlyArray2, PyUntypedArrayMethods};
+    use numpy::ndarray::{Array2, Array3};
+    use numpy::{
+        IntoPyArray, PyArray2, PyArray3, PyReadonlyArray2, PyReadonlyArray3, PyUntypedArrayMethods,
+    };
     use pyo3::prelude::*;
 
     #[pyclass]
@@ -55,6 +57,31 @@ mod dim {
             )
             .expect("Computed background should be same shape as image");
             background.into_pyarray(py)
+        }
+
+        fn estimate_background_stack<'py>(
+            &self,
+            py: Python<'py>,
+            image_stack: PyReadonlyArray3<'py, f32>,
+        ) -> Bound<'py, PyArray3<f32>> {
+            let shape = image_stack.shape().to_vec();
+            let image_stack = image_stack.as_array();
+            let mut image_view_stack = Vec::with_capacity(shape[0]);
+            for i in 0..shape[0] {
+                image_view_stack.push(dim::ImageView::<f32>::new(
+                    &image_stack.as_slice().expect("Image stack should exist")
+                        [i * shape[1] * shape[2]..(i + 1) * shape[1] * shape[2]],
+                    shape[1] as u32,
+                    shape[2] as u32,
+                ));
+            }
+            let background_stack = Array3::from_shape_vec(
+                (shape[0], shape[1], shape[2]),
+                self._rolling_ball
+                    .estimate_background_stack(&image_view_stack),
+            )
+            .expect("Computed background should be same shape as image");
+            background_stack.into_pyarray(py)
         }
     }
 }

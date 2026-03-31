@@ -6,9 +6,9 @@ use core::ops::Index;
 use core::ops::IndexMut;
 use core::simd::f32x8;
 use core::simd::mask32x8;
-use core::simd::masksizex8;
 use core::simd::num::SimdFloat;
-use core::simd::usizex8;
+
+use rayon::prelude::*;
 
 #[derive(PartialEq)]
 pub struct Image<T>
@@ -448,9 +448,20 @@ impl<T> Index<(usize, usize)> for RollingBall<T> {
 
 pub trait RemoveBackground<T>
 where
-    T: Clone + Copy,
+    T: Clone + Copy + Send + Sync,
 {
     fn estimate_background(&self, image: &ImageView<T>) -> Image<T>;
+
+    fn estimate_background_stack(&self, image_stack: &[ImageView<T>]) -> Vec<T>
+    where
+        Self: Sync,
+    {
+        (0..image_stack.len())
+            .into_par_iter()
+            .map(|index| self.estimate_background(&image_stack[index]).data)
+            .flatten()
+            .collect()
+    }
 }
 
 impl RemoveBackground<f32> for RollingBall<f32> {
