@@ -1,0 +1,21 @@
+[build-system]
+requires = ["maturin>=1.9.4,<2"]
+build-backend = "maturin"
+
+[project]
+name = "dim"
+version = "0.1"
+description = "Diptodip's image processing library in Python"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = [
+    "numpy",
+    "jaxtyping"
+]
+
+[tool.maturin]
+python-source = "pysrc"
