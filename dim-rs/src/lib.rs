@@ -544,8 +544,6 @@ impl RemoveBackground<f32> for RollingBall<f32> {
             let mut background = Image::new(downsampled.height, downsampled.width, f32::MIN);
             let height = background.height as i32;
             let width = background.width as i32;
-            let zero_splatted = f32x8::splat(0.0);
-            let mask_true = mask32x8::splat(true);
             for y in radius..(height - radius) {
                 let y_start = (y - radius) as usize;
                 let y_end = (y + radius) as usize;
@@ -564,14 +562,14 @@ impl RemoveBackground<f32> for RollingBall<f32> {
                                 let i = f32x8::load_select_unchecked(
                                     &downsampled.data
                                         [image_start + block * 8..image_start + block * 8 + 8],
-                                    mask_true,
-                                    zero_splatted,
+                                    mask32x8::splat(true),
+                                    f32x8::splat(0.0),
                                 );
                                 let k = f32x8::load_select_unchecked(
                                     &ball.kernel
                                         [ball_start + block * 8..ball_start + block * 8 + 8],
-                                    mask_true,
-                                    zero_splatted,
+                                    mask32x8::splat(true),
+                                    f32x8::splat(0.0),
                                 );
                                 let z_reduced = (i - k).reduce_min();
                                 if z > z_reduced {
@@ -588,7 +586,6 @@ impl RemoveBackground<f32> for RollingBall<f32> {
                             }
                         }
                     }
-                    let z_splatted = f32x8::splat(z);
                     for (background_row, ball_row) in
                         zip(y_start as usize..=y_end as usize, 0..ball.kernel_width)
                     {
@@ -601,21 +598,21 @@ impl RemoveBackground<f32> for RollingBall<f32> {
                                 let mut b = f32x8::load_select_unchecked(
                                     &background.data[background_start + block * 8
                                         ..background_start + block * 8 + 8],
-                                    mask_true,
-                                    zero_splatted,
+                                    mask32x8::splat(true),
+                                    f32x8::splat(0.0),
                                 );
                                 let k = f32x8::load_select_unchecked(
                                     &ball.kernel
                                         [ball_start + block * 8..ball_start + block * 8 + 8],
-                                    mask_true,
-                                    zero_splatted,
+                                    mask32x8::splat(true),
+                                    f32x8::splat(0.0),
                                 );
-                                let z_min = z_splatted + k;
+                                let z_min = f32x8::splat(z) + k;
                                 b = b.simd_max(z_min);
                                 b.store_select_unchecked(
                                     &mut background.data[background_start + block * 8
                                         ..background_start + block * 8 + 8],
-                                    mask_true,
+                                    mask32x8::splat(true),
                                 );
                             }
                             for remainder in 0..ball.kernel_width - blocks_end {
